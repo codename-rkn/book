@@ -1,0 +1,6 @@
+[book]
+authors = ["Tasos Laskos"]
+language = "en"
+multilingual = false
+src = "src"
+title = "Codename RKN"
