@@ -2,6 +2,10 @@
 
 [Introduction](./README.md)
 
+[Installation](./installation.md)
+
+[System requirements](./system-requirements.md)
+
 # Interfaces
 
 - [CLI](./interfaces/cli.md)
