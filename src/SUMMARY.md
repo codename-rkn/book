@@ -14,3 +14,5 @@
 # How to
 
 - [Run air-gapped](./how-to/run-air-gapped.md)
+
+[Copyright](./COPYING.md)
