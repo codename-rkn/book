@@ -13,6 +13,7 @@
 
 # How to
 
+- [Run air-gapped](./how-to/run-air-gapped.md)
 - [Optimize scans](./how-to/optimize-scans.md)
 
 [Copyright](./COPYING.md)
