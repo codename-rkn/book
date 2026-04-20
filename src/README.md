@@ -1,4 +1,4 @@
-![alt text](gfx/velox-scan-banner.png)
+![alt text](gfx/apex-recon-banner.png)
 
 # Introduction
 
