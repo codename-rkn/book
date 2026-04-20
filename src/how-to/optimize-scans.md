@@ -1,6 +1,6 @@
 # Optimize scans
 
-Left to its own devices, Codename RKN will try to optimize itself to match any given
+Left to its own devices, Apex Recon will try to optimize itself to match any given
 circumstance, but there are limitations to what it can do automatically.
 
 If a scan is taking too long, chances are that there are ways to make it go much 
