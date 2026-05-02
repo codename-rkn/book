@@ -7,7 +7,7 @@ The WebUI allows you to easily run, manage and schedule scans and their results 
 To boot the Pro interface please run:
 
 ```
-bin/rkn_pro
+bin/apex_pro
 ```
 
 After boot-up, you can [visit](http://localhost:9292) the interface via your browser of choice.
