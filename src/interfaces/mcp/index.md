@@ -120,6 +120,48 @@ When a validator is registered the server requires
 Without a validator the server accepts unauthenticated traffic — fine for a
 loopback bind, dangerous on a public interface.
 
+## Connecting an MCP client
+
+An AI client (Claude Desktop / Code, Cursor, Continue, anything that speaks
+MCP) does not need any out-of-band documentation to use the server. The
+[protocol itself is self-describing][mcp-tools]: after the `initialize`
+handshake the client calls `tools/list` and the server returns each tool's
+`name`, `description`, and `inputSchema` (JSON Schema). Whatever you read in
+the [Tools — framework](#tools--framework-mcp) and
+[Tools — scan](#tools--scan-instancesinstancescan) tables above is exactly
+what the model sees in its context, in-band, at decision time. The
+descriptions are the docs.
+
+[mcp-tools]: https://modelcontextprotocol.io/docs/concepts/tools
+
+A typical client config looks like:
+
+```jsonc
+{
+  "mcpServers": {
+    "apex-recon": {
+      "url": "http://127.0.0.1:7331/mcp"
+    }
+  }
+}
+```
+
+Two caveats specific to this server:
+
+- **Per-instance discovery is manual.** The framework tools at `/mcp`
+  (`spawn_instance` / `list_instances` / `kill_instance`) are visible the
+  moment the client connects. The scan tools at
+  `/instances/<instance_id>/scan` only exist *after* an _Instance_ has been
+  spawned, and most MCP clients don't auto-mount new endpoints mid-session.
+  Practical patterns: pre-spawn an _Instance_ and put both URLs in the
+  client config, or have the AI itself call `spawn_instance` against `/mcp`
+  and then ask the user to add the per-_Instance_ URL.
+
+- **Transport is Streamable HTTP.** Many older clients (notably Claude
+  Desktop's stdio mode) speak only stdio; for those, drop in any of the
+  community stdio↔HTTP MCP bridges. Cursor / Claude Code / Continue speak
+  Streamable HTTP natively.
+
 ## Example — curl walkthrough
 
 Spawn an _Instance_:
