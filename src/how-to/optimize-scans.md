@@ -17,12 +17,12 @@ you can experiment with them to better match your available resources as well.
 
 ## Ensure server responsiveness
 
-By default, RKN will monitor the response times of the server and throttle
+By default, Apex Recon will monitor the response times of the server and throttle
 itself down if it detects that the server is getting stressed. 
 This happens in order to keep the server alive and responsive and maintain a
 stable connection to it.
 
-However, there are times with weak servers when they die before RKN gets a
+However, there are times with weak servers when they die before Apex Recon gets a
 chance to adjust itself.
 
 You can bring up the scan statistics on the CLI screen by hitting `Enter`, in
@@ -45,7 +45,7 @@ We can see that the server is having a hard time from the following values:
 * Burst average: 0 requests/second
 * Throttled max concurrency: 2
 
-The response times were so high (1.75 seconds) that RKN had to throttle its
+The response times were so high (1.75 seconds) that Apex Recon had to throttle its
 HTTP request concurrency from 10 requests to 2 requests, which would result in a
 drastically increased scan time.
 
@@ -60,7 +60,7 @@ Most excessive RAM consumption issues are caused by large (or a lot of) HTTP req
 which need to be temporarily stored in memory in order for them to later be scheduled
 in a way that achieves optimal network concurrency.
 
-To cut this short, having a lot of HTTP requests in the queue allows RKN to
+To cut this short, having a lot of HTTP requests in the queue allows Apex Recon to
 be better at performing a lot of them at the same time, and thus makes better 
 use of your available bandwidth. So, a large queue means better network performance.
 
@@ -75,10 +75,10 @@ You can adjust the HTTP request queue size via the `--http-request-queue-size` o
 
 ## Reduce RAM consumption by avoiding large resources
 
-RKN performs a large number of analysis operations on each web page.
+Apex Recon performs a large number of analysis operations on each web page.
 This is usually not a problem, except for when dealing with web pages of large sizes.
 
-If you are in a RAM constrained environment, you can configure RKN to not 
+If you are in a RAM constrained environment, you can configure Apex Recon to not 
 download and analyze pages which exceed a certain size limit -- by default, that
 limit is 500KB.
 
@@ -94,7 +94,7 @@ Auditing the first (or first few) of such pages is
 often enough and trying to follow and audit them all can sometimes result in an
 infinite crawl, as can be the case with calendars.
 
-RKN provides 2 features to help deal with that:
+Apex Recon provides 2 features to help deal with that:
 
 * Redundancy filters: Specify `pattern` and `counter` pairs, pages matching the
   `pattern` will be followed the amount of times specified by the `counter`.
@@ -105,7 +105,7 @@ RKN provides 2 features to help deal with that:
 
 ## Adjust the amount of browser workers
 
-RKN uses real browsers to support technologies such as HTML5, AJAX and DOM
+Apex Recon uses real browsers to support technologies such as HTML5, AJAX and DOM
 manipulation and perform deep analysis of client-side code.
 
 Even though browser operations are performed in parallel using a pool of workers,
