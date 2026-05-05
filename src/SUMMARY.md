@@ -9,6 +9,7 @@
 # Interfaces
 
 - [CLI](./interfaces/cli.md)
+- [MCP](./interfaces/mcp/index.md)
 - [Web UI](./interfaces/web/index.md)
 
 # How to
