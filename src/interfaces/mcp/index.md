@@ -109,7 +109,8 @@ the first thing to check.
 
 | Prompt               | Required | Description                                                                                  |
 |----------------------|----------|----------------------------------------------------------------------------------------------|
-| `quick_scan(url)`    | `url`    | Canned operator workflow. Expanding it produces a 5-step user message that walks the AI through reading the options reference, calling `spawn_instance` with the quick-scan preset, polling `scan_progress` every 5 s using deltas, fetching `scan_entries` when status reaches `done`, and `kill_instance`-ing afterwards. |
+| `quick_scan(url)`    | `url`    | Canned operator workflow for the **bounded smoke test** — expands into a 6-step user message that walks the AI through reading the options reference, building `options` from the quick-scan preset (`scope.page_limit: 50` baked in), `spawn_instance`, polling `scan_progress` every 5 s using deltas, fetching `scan_entries` when status reaches `done`, and `kill_instance`-ing afterwards. Optional args: `page_limit` (override the cap), `authorized_by`, `extra_options`. |
+| `full_scan(url)`     | `url`    | Same shape as `quick_scan` minus the 50-page cap — drives a complete recon using the full-scan preset. Use when you want a thorough run and accept hours of polling. Optional args: `authorized_by`, `extra_options`. |
 
 The expanded prompt body references resources by URI so the model has
 a clear pull path for the data — it doesn't need to memorise option
@@ -120,15 +121,28 @@ names.
 | URI                                    | Mime               | Contents                                                                          |
 |----------------------------------------|--------------------|-----------------------------------------------------------------------------------|
 | `apex://glossary`                      | `text/markdown`    | Domain terms (entry, digest, sink, mutation, action, platforms, status, sitemap, statistics). Read once before driving a scan. |
-| `apex://options/reference`             | `text/markdown`    | Concrete keys for `spawn_instance.options` (url, scope, audit, http, browser_cluster, plugins, authorized_by). Apex auto-loads its sink-trace checks — no `checks` key. |
-| `apex://option-presets/quick-scan`     | `application/json` | JSON template mirroring the `apex_scan` CLI default — all elements traced, default plugins, sink-trace checks auto-loaded, no scope cap. |
+| `apex://options/reference`             | `text/markdown`    | Concrete keys for `spawn_instance.options` (url, scope, audit, http, browser_cluster, plugins, authorized_by, sinks_filter). Apex auto-loads its sink-trace checks — no `checks` key. |
+| `apex://option-presets/quick-scan`     | `application/json` | JSON template — every audit element traced, default plugins, the four-kind `sinks_filter` default (every sink except `blind`), **`scope.page_limit: 50`** so a real-site smoke test finishes in minutes. Bump / drop the cap (or switch to `full-scan`) for a longer recon. |
+| `apex://option-presets/full-scan`      | `application/json` | Same shape as `quick-scan` minus the page cap — uncapped recon. Use when you want a complete run and accept a long wait. |
 
-The quick-scan preset right now is:
+Quick-scan preset:
 
 ```json
 {
-  "url":     "<TARGET URL>",
-  "plugins": ["defaults/*"]
+  "url":          "<TARGET URL>",
+  "audit":        { "elements": ["links","forms","cookies","headers","ui_inputs","ui_forms","jsons","xmls"] },
+  "sinks_filter": ["active","body","header_name","header_value"],
+  "scope":        { "page_limit": 50 }
+}
+```
+
+Full-scan preset (same minus `scope`):
+
+```json
+{
+  "url":          "<TARGET URL>",
+  "audit":        { "elements": ["links","forms","cookies","headers","ui_inputs","ui_forms","jsons","xmls"] },
+  "sinks_filter": ["active","body","header_name","header_value"]
 }
 ```
 
@@ -159,14 +173,15 @@ downstream middleware that wants to look it up.
 If you're an AI seeing this server for the first time, do this once:
 
 1. `initialize` → check `serverInfo.name` (`apex`) and `version`.
-2. `resources/list` → you'll see three URIs. **Read all three** — they
+2. `resources/list` → you'll see four URIs. **Read all four** — they
    are tiny and answer most of the questions you'd otherwise have to
    ask. The glossary in particular grounds the field names you'll see
    in `scan_progress` / `scan_entries` results (sink, mutation, action,
    platforms).
-3. `prompts/list` → you'll see `quick_scan`. If the user's intent
-   matches it ("recon this URL for active inputs"), use it: `prompts/get`
-   with their URL gives you a full operator script.
+3. `prompts/list` → you'll see `quick_scan` (capped 50-page smoke
+   test) and `full_scan` (uncapped). If the user's intent matches one
+   ("recon this URL for active inputs"), use it: `prompts/get` with
+   their URL gives you a full operator script.
 4. `tools/list` → discover the 11 tools. `outputSchema` on each tells
    you exactly what `structuredContent` to expect.
 
@@ -303,10 +318,12 @@ through the JSON-RPC error envelope, not as a tool error:
 - `audit.elements` defaults to all kinds when the key is omitted, which
   is what the CLI does. Pass an explicit list to restrict — e.g.
   `["links", "forms"]` skips cookies, headers, JSON/XML bodies, etc.
-- `scope.page_limit` is the most common knob to add — without it a
-  real recon against a real site can take hours and saturate the
-  browser pool. Sensible quick-run values: 30 (smoke test), 200
-  (representative), unbounded (full recon).
+- `scope.page_limit` is baked into the quick-scan preset at **50** — a
+  real-site smoke test that finishes in minutes. Override the
+  `page_limit` prompt arg (or the JSON directly) for a smaller / larger
+  cap; switch to the `full-scan` preset (or the `full_scan` prompt) for
+  an uncapped recon. Sensible explicit values: 30 (smaller smoke test),
+  200 (representative).
 - `authorized_by` — set this to the operator's email; it shows up in
   the engine's outbound HTTP `From` header so target-site admins can
   identify the scan. Not required, but polite on third-party targets.
@@ -378,8 +395,8 @@ That's all. After `initialize`, the client sees:
 
 - 11 tools (3 framework + 8 per-scan), each with input + output
   schema.
-- 1 prompt (`quick_scan`).
-- 3 resources.
+- 2 prompts (`quick_scan`, `full_scan`).
+- 4 resources.
 
 If your client only speaks stdio (older Claude Desktop builds), use
 any community stdio↔HTTP MCP bridge in front. Cursor, Claude Code,
