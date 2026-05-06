@@ -310,6 +310,19 @@ through the JSON-RPC error envelope, not as a tool error:
 - `authorized_by` — set this to the operator's email; it shows up in
   the engine's outbound HTTP `From` header so target-site admins can
   identify the scan. Not required, but polite on third-party targets.
+- `sinks_filter` — record-time whitelist of sink kinds (mirrors the
+  CLI's `--sink-filter`). Four states:
+  - **omit the key** → MCP server applies the default
+    `["active", "body", "header_name", "header_value"]` (every sink
+    kind except `blind`). Mirrors the `apex_scan` CLI default.
+  - `null` → no filter, log every sink kind including `blind`.
+  - `[]` (empty array) → log NOTHING. The engine still crawls and
+    produces a sitemap; no entries get recorded. Useful for a pure
+    discovery pass.
+  - populated array (e.g. `["active"]`) → whitelist that subset.
+  Hits at filtered-out sinks are skipped at trace time and never
+  enter `scan_entries` / `scan_report`. See `apex://options/reference`
+  for the on-the-wire description.
 
 ## Conventions baked into the descriptions
 

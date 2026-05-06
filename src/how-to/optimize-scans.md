@@ -14,6 +14,7 @@ you can experiment with them to better match your available resources as well.
 3. [Reduce RAM consumption by avoiding large resources](#reduce-ram-consumption-by-avoiding-large-resources)
 4. [Don't follow redundant pages](#dont-follow-redundant-pages)
 5. [Adjust the amount of browser workers](#adjust-the-amount-of-browser-workers)
+6. [Narrow recon to specific sink kinds](#narrow-recon-to-specific-sink-kinds)
 
 ## Ensure server responsiveness
 
@@ -123,3 +124,41 @@ they will also accelerate workload generation.
 
 You can set this option via `--dom-pool-size`.
 The default is calculated based on the amount of available CPU cores your system has.
+
+## Narrow recon to specific sink kinds
+
+If you already know which class of finding you care about, restrict
+sink-tracing to that subset. Hits at filtered-out sinks are skipped
+at trace time, so they don't pay the trace cost and they don't
+bloat the report.
+
+The five sink kinds are:
+
+* `active` — input reaches an exec-context sink (eval / Runtime.exec
+  / SQL execute / innerHTML / DOM event handler). Highest leverage.
+* `body` — value reflected verbatim into the response body
+  (XSS / HTML-injection-shaped surfaces).
+* `header_name` — value reflected into a response header NAME.
+* `header_value` — value reflected into a response header VALUE.
+* `blind` — input reaches a sink with no observable response signal
+  (timing / out-of-band only).
+
+The CLI defaults to the first four and skips `blind` because blind
+hits are noise on most chatty targets. Override with
+`--sink-filter NAME` (repeatable):
+
+    # Only exec-context findings — fastest narrowing for triage runs
+    bin/apex https://example.com/ --sink-filter active
+
+    # Add `blind` back to the default set
+    bin/apex https://example.com/ \
+        --sink-filter active --sink-filter body \
+        --sink-filter header_name --sink-filter header_value \
+        --sink-filter blind
+
+The first explicit `--sink-filter` flag clears the default;
+subsequent flags accumulate. From an MCP client, pass the same
+list as `options.sinks_filter` (omit the key to inherit the
+four-kind default; pass `[]` for a crawl-only run that produces
+just a sitemap). The web profile UI exposes the same toggles per
+profile.
